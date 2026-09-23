@@ -19,6 +19,56 @@ docker compose down             # 停止并删除
 docker compose up -d --build    # 重新构建
 ```
 
+## 打包与发布到 Docker Hub
+
+`build-push.sh` 用于本地构建并发布镜像，支持 **Linux 与 macOS**，并自动构建多架构镜像。
+
+```bash
+./build-push.sh --login     # 首次使用，先登录 Docker Hub
+./build-push.sh             # 构建 amd64+arm64 并推送
+./build-push.sh -t v1.0.0   # 追加自定义标签
+```
+
+| 参数 | 说明 |
+| --- | --- |
+| （无） | 构建 `linux/amd64,linux/arm64` 并推送 `latest` + 日期标签 |
+| `--login` | 先执行 `docker login` |
+| `--load` | 仅构建本机架构并加载到本地，不推送 |
+| `--no-push` | 构建多架构但不推送，仅验证能否构建成功 |
+| `-t, --tag <标签>` | 追加一个标签，如 `v1.0.0` |
+| `--platforms <列表>` | 覆盖目标架构 |
+| `--image <仓库>` | 覆盖完整镜像名 |
+
+可用环境变量（或写入 `.env.deploy`）：
+
+| 变量 | 默认值 |
+| --- | --- |
+| `DOCKER_USER` | `ningning0111` |
+| `IMAGE_NAME` | `outlook-viewer` |
+| `PLATFORMS` | `linux/amd64,linux/arm64` |
+| `TAG` | 空 |
+
+发布结果：
+
+```text
+docker pull ningning0111/outlook-viewer:latest
+docker pull ningning0111/outlook-viewer:20260923
+```
+
+### 使用已发布镜像
+
+```bash
+docker run -d \
+  --name outlook-viewer \
+  -p 127.0.0.1:8000:8000 \
+  -e SECRET_KEY="$(openssl rand -hex 32)" \
+  --read-only --tmpfs /tmp:size=16m \
+  --cap-drop ALL --security-opt no-new-privileges:true \
+  ningning0111/outlook-viewer:latest
+```
+
+> 依赖 `docker buildx`（Docker Desktop 自带）。多架构镜像无法 `--load` 到本地，需推送到仓库后拉取。
+
 ## 配置项（.env）
 
 | 变量 | 默认 | 说明 |
