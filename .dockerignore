@@ -1,0 +1,9 @@
+# Build output and local state that must never enter the image.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.log

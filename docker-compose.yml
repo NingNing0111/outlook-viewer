@@ -1,0 +1,48 @@
+services:
+  mail-viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mail-viewer:latest
+    container_name: mail-viewer
+    restart: unless-stopped
+    ports:
+      # Bound to localhost by default: publish via a reverse proxy / tunnel.
+      # Change to "8000:8000" to expose on all interfaces.
+      - "127.0.0.1:${HOST_PORT:-8000}:8000"
+    environment:
+      # Signs session cookies. Set a fixed value to survive restarts.
+      # Generate one with:  openssl rand -hex 32
+      SECRET_KEY: ${SECRET_KEY:-}
+      # Set to 1 ONLY when serving over HTTPS (e.g. behind a TLS proxy or tunnel).
+      # If left at 1 while testing over plain http://, the browser drops the
+      # session cookie and every request fails with "页面已过期".
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+      # Optional: prefill the clientid input on the page.
+      DEFAULT_CLIENT_ID: ${DEFAULT_CLIENT_ID:-}
+    # Container is stateless, so a read-only root filesystem is safe.
+    read_only: true
+    tmpfs:
+      # gunicorn/python need a writable /tmp only.
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        # Never let mailbox reads grow unbounded on disk.
+        max-size: "5m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/', timeout=4).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M

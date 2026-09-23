@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf }}">
+<title>拾信 · 邮件提取助手</title>
+<link rel="stylesheet" href="/static/style.css">
+<script defer src="/static/app.js"></script>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">✉ <span>拾信<span class="brand-dot">.</span></span></a>
+  <span class="header-tag">MAIL READER / 邮件提取助手</span>
+  <button class="quiet group" type="button">AI账号交流群（QQ）：1071504366 ↗</button>
+</header>
+<main>
+  <section class="hero">
+    <span class="eyebrow"><i></i> 简单一点，收信快一点</span>
+    <h1>你的验证码，<br><span>不必再翻找。</span></h1>
+    <p>粘贴邮箱信息，一键读取 Outlook 收件箱。验证码自动识别，重要信息即刻可见。</p>
+    <div class="pills"><span>✓ 无需安装</span><span>✓ 凭据不落盘</span><span>✓ 一键复制验证码</span></div>
+  </section>
+
+  <div class="workspace" id="workspace">
+    <section class="card input-card">
+      <div class="section-title"><span class="step">01</span><h2>导入邮箱</h2><span class="badge">Graph 直连</span></div>
+      <label for="raw">邮箱信息 <span>支持 ---- 分隔</span></label>
+      <textarea id="raw" spellcheck="false" autocomplete="off"
+        placeholder="邮箱----密码----clientid----refreshtoken"></textarea>
+      <details>
+        <summary>查看支持的输入格式</summary>
+        <p>常用格式（4 段）</p>
+        <code>邮箱----密码----clientid----refreshtoken</code>
+        <p>原始格式（7 段）</p>
+        <code>邮箱----密码----API地址----邮箱----密码----clientid----refreshtoken</code>
+        <p>简化格式（5 段）</p>
+        <code>邮箱----密码----邮箱----clientid----refreshtoken</code>
+        <p>最简格式（3 段）</p>
+        <code>邮箱----clientid----refreshtoken</code>
+        <p>密码与 API 地址字段仅用于兼容输入，系统统一通过 Microsoft Graph 直连读取。也支持 —- 分隔符。请仅填写本人或已获授权的账户。</p>
+      </details>
+      <label for="client">clientid</label>
+      <input id="client" type="text" spellcheck="false" autocomplete="off" value="{{ default_client }}" placeholder="应用 clientid（UUID）">
+      <label for="token">refresh token</label>
+      <input id="token" type="password" spellcheck="false" autocomplete="off" placeholder="粘贴 refresh token">
+      <p class="hint" id="mode-hint">若已粘贴完整邮箱信息，可留空下方两项；系统会自动从粘贴内容中解析。刷新令牌仅发送给微软，不写入日志或数据库。</p>
+      <div class="actions">
+        <button class="primary" id="fetch" type="button">提取邮件 <span>→</span></button>
+        <button class="secondary" id="clear" type="button">清空</button>
+      </div>
+      <p class="privacy">♧ 信息仅用于本次读取，不写入数据库或浏览器本地存储。</p>
+      <div class="notice" id="status" role="status" hidden></div>
+    </section>
+
+    <section class="card results">
+      <div class="section-title"><span class="step">02</span><h2>收件箱</h2><span class="badge" id="count">等待提取</span></div>
+      <div class="mail-meta"><span id="account">读取结果将在这里显示</span><button class="quiet" id="refresh" type="button" disabled>↻ 刷新</button></div>
+      <div id="empty">
+        <div class="empty-icon">✉</div>
+        <h3>等一封重要的来信</h3>
+        <p>在左侧填写邮箱信息，点击“提取邮件”<br>即可查看内容与可能的验证码。</p>
+        <span>只读访问 · 不发送或删除邮件</span>
+      </div>
+      <div id="messages"></div>
+    </section>
+  </div>
+
+  <section class="community">
+    <div class="community-icon">↗</div>
+    <div>
+      <span class="eyebrow">保持联系</span>
+      <h2>好用的工具，一起分享。</h2>
+      <p>加入 AI账号交流群（QQ），获取使用帮助、反馈问题与功能更新。</p>
+    </div>
+    <button class="primary group" type="button">加入 AI账号交流群（QQ）· 1071504366 ↗</button>
+  </section>
+  <footer><span>© 拾信 MAIL READER</span><span>仅限本人或已获授权的邮箱 · 验证码识别结果仅供参考</span></footer>
+</main>
+<div id="toast" role="status" hidden></div>
+</body>
+</html>
