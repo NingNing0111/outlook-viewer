@@ -78,7 +78,20 @@ function render(messages) {
 
     const details = element('details', '');
     const summary = element('summary', '', '查看邮件正文');
-    details.append(summary, element('pre', '', mail.body || '这封邮件没有可显示的正文。'));
+    details.open = true;
+    details.append(summary);
+    if (mail.bodyType === 'html' && mail.body) {
+      const frame = element('iframe', 'mail-body');
+      frame.title = `邮件正文：${mail.subject}`;
+      // Keep the original HTML intact, but isolate untrusted email scripts.
+      // A default navigation target keeps links out of the constrained iframe.
+      frame.setAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox');
+      frame.referrerPolicy = 'no-referrer';
+      frame.srcdoc = '<base target="_blank">' + mail.body;
+      details.append(frame);
+    } else {
+      details.append(element('pre', '', mail.body || '这封邮件没有可显示的正文。'));
+    }
     article.append(details);
     $('messages').append(article);
   }

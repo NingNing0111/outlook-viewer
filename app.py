@@ -257,7 +257,7 @@ def fetch_graph(email, client, token):
             owner = ''
 
     data = get_json('GET', 'https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages',
-                    headers=auth,
+                    headers={**auth, 'Prefer': 'outlook.body-content-type="html"'},
                     params={'$top': '25', '$orderby': 'receivedDateTime desc',
                             '$select': 'subject,from,toRecipients,receivedDateTime,body,bodyPreview'})
 
@@ -297,15 +297,23 @@ def normalize(data):
                 sender = f'{name} <{mail}>' if name and mail else (mail or name or '未知发件人')
         preview = plain(item.get('bodyPreview') or '')
         raw_body = item.get('body') or item.get('bodyPreview') or ''
-        body = plain(raw_body) or preview
-        if len(body) > 20000:
-            body = body[:20000] + '\n…（正文过长，已截断）'
+        if isinstance(raw_body, dict):
+            body = raw_body.get('content')
+            if body is None:
+                body = raw_body.get('text') or ''
+            body_type = str(raw_body.get('contentType') or 'text').lower()
+        else:
+            body = raw_body
+            body_type = 'text'
+        body = str(body)
         subject = plain(item.get('subject') or '无主题')[:300]
-        codes = extract_codes(subject + '\n' + preview + '\n' + body)
+        # Text extraction is only for code suggestions, never for rendering.
+        codes = extract_codes(subject + '\n' + preview + '\n' + plain(body)[:20000])
         result.append(dict(
             subject=subject,
             sender=str(sender)[:500],
-            body=body or preview or '这封邮件没有可显示的正文。',
+            body=body,
+            bodyType='html' if body_type == 'html' else 'text',
             date=str(item.get('receivedDateTime') or ''),
             codes=codes,
         ))
@@ -317,8 +325,11 @@ def headers(response):
     response.headers.update({
         'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; "
-                                   "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; "
+        # srcdoc inherits this policy: allow original email styles and images.
+        # The mail iframe sandbox separately forbids scripts and same-origin access.
+        'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https:; "
+                                   "img-src 'self' data: https: http:; font-src 'self' data: https:; "
+                                   "frame-src 'self' about:; connect-src 'self'; frame-ancestors 'none'; "
                                    "base-uri 'none'; form-action 'self'",
     })
     return response

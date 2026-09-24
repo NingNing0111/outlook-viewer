@@ -136,7 +136,8 @@ def test_normalize_graph_shape():
     assert result[0]['sender'] == 'Meta <security@account.meta.com>'
     assert result[0]['date'] == '2026-09-23T12:43:14Z'
     assert result[0]['codes'] == ['706097']
-    assert result[0]['body'] == '验证码 706097'
+    assert result[0]['body'] == '<p>验证码 <b>706097</b></p>'
+    assert result[0]['bodyType'] == 'html'
 
 
 def test_normalize_empty_inbox():
@@ -148,9 +149,30 @@ def test_normalize_rejects_unexpected_shape():
         mod.normalize({'unexpected': 'shape'})
 
 
-def test_normalize_truncates_long_body():
-    data = {'value': [{'subject': 's', 'body': {'content': 'x' * 30000}}]}
-    assert '已截断' in mod.normalize(data)[0]['body']
+@pytest.mark.parametrize('content_type', ['html', 'text'])
+def test_normalize_preserves_long_body(content_type):
+    body = '  ' + 'x' * 210000 + '\n\n  end\t'
+    data = {'value': [{'body': {'contentType': content_type, 'content': body}}]}
+    result = mod.normalize(data)[0]
+    assert result['body'] == body
+    assert result['bodyType'] == content_type
+
+
+def test_normalize_preserves_html_links_and_styles():
+    body = ('<!doctype html><html><head><style>.button{color:red}</style></head>'
+            '<body><a class="button" href="https://example.com/verify?a=1&amp;b=2">'
+            '点击验证</a><img src="https://example.com/logo.png"></body></html>')
+    result = mod.normalize({'value': [{'body': {'contentType': 'HTML', 'content': body}}]})[0]
+    assert result['body'] == body
+    assert result['bodyType'] == 'html'
+
+
+def test_normalize_preserves_literal_text_and_preview():
+    body = '  <not-html>\t hello\n\n\nworld  '
+    for item in [{'body': {'contentType': 'text', 'content': body}}, {'bodyPreview': body}]:
+        result = mod.normalize({'value': [item]})[0]
+        assert result['body'] == body
+        assert result['bodyType'] == 'text'
 
 
 # ------------------------------------------------------------ network / scope
@@ -193,7 +215,8 @@ def test_fetch_graph_uses_default_scope(monkeypatch):
     assert len(token_calls) == 1
     assert token_calls[0][2]['data']['scope'] == 'https://graph.microsoft.com/.default offline_access'
     assert all('xiaoheiapi' not in c[1] for c in calls)
-    assert any('/me/mailFolders/inbox/messages' in c[1] for c in calls)
+    mail_call = next(c for c in calls if '/me/mailFolders/inbox/messages' in c[1])
+    assert mail_call[2]['headers']['Prefer'] == 'outlook.body-content-type="html"'
 
 
 def make_csrf(client):
