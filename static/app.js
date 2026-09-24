@@ -107,8 +107,8 @@ async function loadMail() {
   try {
     const data = await post('/api/mail', {
       raw: $('raw').value,
-      client: $('client').value.trim(),
-      token: $('token').value.trim()
+      client: ($('client')?.value || '').trim(),
+      token: ($('token')?.value || '').trim()
     });
     render(data.messages);
     $('account').textContent = data.email;
@@ -132,7 +132,7 @@ $('refresh').addEventListener('click', loadMail);
 
 $('clear').addEventListener('click', () => {
   $('raw').value = '';
-  $('token').value = '';
+  if ($('token')) $('token').value = '';
   $('messages').replaceChildren();
   $('status').hidden = true;
   $('empty').hidden = false;
@@ -157,3 +157,14 @@ for (const button of groupButtons) {
     );
   });
 }
+
+// 每次访问强制弹窗：AI账号交流群
+$('modal-close').addEventListener('click', () => {
+  $('group-modal').hidden = true;
+});
+$('modal-copy').addEventListener('click', () => {
+  navigator.clipboard.writeText('1071504366').then(
+    () => toast('已复制QQ群号：1071504366'),
+    () => toast('AI账号交流群（QQ）：1071504366')
+  );
+});

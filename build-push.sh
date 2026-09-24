@@ -111,11 +111,31 @@ if [ "$DO_LOGIN" = "1" ]; then
   ok "登录完成"
 fi
 
+check_docker_login() {
+  # 本次执行如果已经显式执行了 login 并成功
+  if [ "$DO_LOGIN" = "1" ]; then
+    return 0
+  fi
+  # 检查旧版 docker info 输出
+  if docker info 2>/dev/null | grep -q 'Username:'; then
+    return 0
+  fi
+  # 检查 Docker 配置文件中的凭据或 registry 配置
+  local config_file="${DOCKER_CONFIG:-$HOME/.docker}/config.json"
+  if [ -f "$config_file" ]; then
+    if grep -qE '("https://index\.docker\.io/v1/"|"registry-1\.docker\.io"|"docker\.io")' "$config_file" 2>/dev/null; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
 if [ "$DO_PUSH" = "1" ]; then
-  if ! docker info 2>/dev/null | grep -q 'Username:'; then
-    warn "看起来尚未登录 Docker Hub"
-    warn "如需登录请重新执行: $0 --login"
-    die "推送前请先登录 (或使用 --load 仅本地构建)"
+  if check_docker_login; then
+    ok "Docker Hub 登录状态正常"
+  else
+    warn "未检测到 Docker Hub 登录凭据"
+    warn "若稍后推送失败，请先执行: $0 --login"
   fi
 fi
 

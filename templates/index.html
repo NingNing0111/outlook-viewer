@@ -40,11 +40,6 @@
         <code>邮箱----clientid----refreshtoken</code>
         <p>密码与 API 地址字段仅用于兼容输入，系统统一通过 Microsoft Graph 直连读取。也支持 —- 分隔符。请仅填写本人或已获授权的账户。</p>
       </details>
-      <label for="client">clientid</label>
-      <input id="client" type="text" spellcheck="false" autocomplete="off" value="{{ default_client }}" placeholder="应用 clientid（UUID）">
-      <label for="token">refresh token</label>
-      <input id="token" type="password" spellcheck="false" autocomplete="off" placeholder="粘贴 refresh token">
-      <p class="hint" id="mode-hint">若已粘贴完整邮箱信息，可留空下方两项；系统会自动从粘贴内容中解析。刷新令牌仅发送给微软，不写入日志或数据库。</p>
       <div class="actions">
         <button class="primary" id="fetch" type="button">提取邮件 <span>→</span></button>
         <button class="secondary" id="clear" type="button">清空</button>
@@ -66,6 +61,44 @@
     </section>
   </div>
 
+  <section class="tutorial" id="tutorial">
+    <div class="section-title"><span class="step">使用教程</span><h2>拿到卡密，跟着做就能登录 muse.ai</h2><span class="badge">小白友好 · 跟着做即可</span></div>
+    <ol class="steps">
+      <li>
+        <span class="step-num">1</span>
+        <div>
+          <h3>准备卡密</h3>
+          <p>找到你收到的<b>卡密</b>，里面是一段邮箱信息（形如 <code>邮箱----密码----clientid----refreshtoken</code>），对应你的 Outlook 邮箱。</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-num">2</span>
+        <div>
+          <h3>在本平台提取验证码</h3>
+          <p>把整段卡密粘贴到上方「导入邮箱」输入框，点击「提取邮件」。本平台会直连 Outlook 收件箱，自动识别最新验证码。</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-num">3</span>
+        <div>
+          <h3>打开 muse.ai 并登录</h3>
+          <p>点击下方按钮打开 <b>muse.ai</b> 官网（新标签页），点登录后输入卡密里的<b>邮箱地址</b>，muse.ai 会向该邮箱发送一封验证码邮件。</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-num">4</span>
+        <div>
+          <h3>填验证码，完成登录</h3>
+          <p>回到本平台「收件箱」，找到最新的验证码并<b>一键复制</b>，粘贴到 muse.ai 的验证码输入框，即可完成登录。</p>
+        </div>
+      </li>
+    </ol>
+    <div class="tutorial-actions">
+      <a class="primary muse-link" href="https://muse.ai/" target="_blank" rel="noopener noreferrer">前往 muse.ai 官网 ↗</a>
+      <span class="muse-note">⚠ 使用 muse.ai 时，请务必使用<b>干净的美国节点</b>（美国 IP），否则可能收不到验证码或登录失败。</span>
+    </div>
+  </section>
+
   <section class="community">
     <div class="community-icon">↗</div>
     <div>
@@ -77,6 +110,18 @@
   </section>
   <footer><span>© 拾信 MAIL READER</span><span>仅限本人或已获授权的邮箱 · 验证码识别结果仅供参考</span></footer>
 </main>
+<div class="modal-backdrop" id="group-modal" role="dialog" aria-modal="true" aria-labelledby="group-modal-title">
+  <div class="modal">
+    <div class="modal-icon">群</div>
+    <h2 id="group-modal-title">AI账号交流群</h2>
+    <p>加入官方交流群，获取卡密使用帮助、问题反馈与功能更新。</p>
+    <div class="group-number">QQ 群号 <b>1071504366</b></div>
+    <div class="modal-actions">
+      <button class="primary" id="modal-copy" type="button">复制群号</button>
+      <button class="secondary" id="modal-close" type="button">我知道了</button>
+    </div>
+  </div>
+</div>
 <div id="toast" role="status" hidden></div>
 </body>
 </html>
